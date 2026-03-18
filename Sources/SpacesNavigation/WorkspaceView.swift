@@ -17,32 +17,37 @@ public struct WorkspaceView<RowContent: View>: View {
 
     public var body: some View {
         GeometryReader { proxy in
-            let snapshot = layoutEngine.snapshot(for: store.state, viewportSize: proxy.size)
+            if store.state.columns.isEmpty {
+                Color.clear
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                let snapshot = layoutEngine.snapshot(for: store.state, viewportSize: proxy.size)
 
-            ScrollViewReader { verticalReader in
-                ScrollView(.vertical) {
-                    VStack(alignment: .leading, spacing: layoutEngine.metrics.interRowSpacing) {
-                        ForEach(snapshot.lanes) { lane in
-                            WorkspaceLaneScrollView(
-                                lane: lane,
-                                store: store,
-                                rowContent: rowContent
-                            )
-                            .id(lane.id)
-                            .frame(height: lane.contentFrame.height)
+                ScrollViewReader { verticalReader in
+                    ScrollView(.vertical) {
+                        VStack(alignment: .leading, spacing: layoutEngine.metrics.interRowSpacing) {
+                            ForEach(snapshot.lanes) { lane in
+                                WorkspaceLaneScrollView(
+                                    lane: lane,
+                                    store: store,
+                                    rowContent: rowContent
+                                )
+                                .id(lane.id)
+                                .frame(height: lane.contentFrame.height)
+                            }
                         }
                     }
-                }
-                .scrollIndicators(.hidden)
-                .clipped()
-                .onAppear {
-                    scrollToActiveLane(with: verticalReader, snapshot: snapshot, animated: false)
-                }
-                .onChange(of: snapshot.activeLaneID) { _, _ in
-                    scrollToActiveLane(with: verticalReader, snapshot: snapshot, animated: true)
-                }
-                .onChange(of: snapshot.contentRect.height) { _, _ in
-                    scrollToActiveLane(with: verticalReader, snapshot: snapshot, animated: true)
+                    .scrollIndicators(.hidden)
+                    .clipped()
+                    .onAppear {
+                        scrollToActiveLane(with: verticalReader, snapshot: snapshot, animated: false)
+                    }
+                    .onChange(of: snapshot.activeLaneID) { _, _ in
+                        scrollToActiveLane(with: verticalReader, snapshot: snapshot, animated: true)
+                    }
+                    .onChange(of: snapshot.contentRect.height) { _, _ in
+                        scrollToActiveLane(with: verticalReader, snapshot: snapshot, animated: true)
+                    }
                 }
             }
         }
@@ -76,6 +81,11 @@ private struct WorkspaceLaneScrollView<RowContent: View>: View {
         ScrollViewReader { horizontalReader in
             ScrollView(.horizontal) {
                 HStack(alignment: .top, spacing: 0) {
+                    if leadingInset > 0 {
+                        Color.clear
+                            .frame(width: leadingInset)
+                    }
+
                     ForEach(lane.spaces) { space in
                         if let modelColumn = store.state.columns.first(where: { $0.id == space.columnID }),
                            let row = modelColumn.rows.first(where: { $0.id == space.id }) {
@@ -89,6 +99,11 @@ private struct WorkspaceLaneScrollView<RowContent: View>: View {
                                     .frame(width: spaceSpacing(after: space))
                             }
                         }
+                    }
+
+                    if trailingInset > 0 {
+                        Color.clear
+                            .frame(width: trailingInset)
                     }
                 }
                 .padding(.top, lane.topInset)
@@ -123,6 +138,15 @@ private struct WorkspaceLaneScrollView<RowContent: View>: View {
         let current = lane.spaces[index]
         let next = lane.spaces[index + 1]
         return max(0, next.rect.minX - current.rect.maxX)
+    }
+
+    private var leadingInset: CGFloat {
+        max(0, lane.spaces.first?.rect.minX ?? 0)
+    }
+
+    private var trailingInset: CGFloat {
+        guard let last = lane.spaces.last else { return 0 }
+        return max(0, lane.contentSize.width - last.rect.maxX)
     }
 
     private func scrollToTarget(with reader: ScrollViewProxy, animated: Bool) {

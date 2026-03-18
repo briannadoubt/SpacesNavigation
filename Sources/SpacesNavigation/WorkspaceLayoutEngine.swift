@@ -8,6 +8,7 @@ public struct WorkspaceLayoutMetrics: Hashable, Sendable {
     public var regularColumnWidthFraction: CGFloat
     public var zoomedColumnWidthFraction: CGFloat
     public var verticalRowPeek: CGFloat
+    public var alwaysCenterFocusedPaneHorizontally: Bool
 
     public init(
         interColumnSpacing: CGFloat = 28,
@@ -15,7 +16,8 @@ public struct WorkspaceLayoutMetrics: Hashable, Sendable {
         defaultColumnWidth: CGFloat = 720,
         regularColumnWidthFraction: CGFloat = 2.0 / 3.0,
         zoomedColumnWidthFraction: CGFloat = 0.92,
-        verticalRowPeek: CGFloat = 28
+        verticalRowPeek: CGFloat = 28,
+        alwaysCenterFocusedPaneHorizontally: Bool = false
     ) {
         self.interColumnSpacing = interColumnSpacing
         self.interRowSpacing = interRowSpacing
@@ -23,6 +25,7 @@ public struct WorkspaceLayoutMetrics: Hashable, Sendable {
         self.regularColumnWidthFraction = regularColumnWidthFraction
         self.zoomedColumnWidthFraction = zoomedColumnWidthFraction
         self.verticalRowPeek = verticalRowPeek
+        self.alwaysCenterFocusedPaneHorizontally = alwaysCenterFocusedPaneHorizontally
     }
 }
 
@@ -268,7 +271,6 @@ public struct WorkspaceLayoutEngine: Sendable {
             min(viewportSize.width * metrics.zoomedColumnWidthFraction, viewportSize.width),
             metrics.defaultColumnWidth
         )
-        let regularLaneHeight = viewportSize.height
         let activeExpandedRowID: WorkspaceRow.ID? = {
             guard case .expandedSpaces(let expanded) = state.viewportMode,
                   expanded.contains(state.focus.rowID) else {
@@ -276,57 +278,36 @@ public struct WorkspaceLayoutEngine: Sendable {
             }
             return state.focus.rowID
         }()
-
         return (0..<laneCount).map { rowIndex in
             let laneColumns = state.columns(forRowIndex: rowIndex)
+            let usesSinglePaneLane = laneColumns.count == 1
             var xCursor: CGFloat = 0
             var spaces: [LaneSpaceLayout] = []
             let isExpandedActiveLane = rowIndex == state.activeRowIndex && activeExpandedRowID == state.focus.rowID
-            let usesFullFrameLane = isExpandedActiveLane
-            let scaledLaneHeight = max(
-                viewportSize.height * state.rowHeightScale(for: rowIndex),
-                viewportSize.height * WorkspaceState.minimumWorkspaceScale
-            )
-            let laneFrameHeight = usesFullFrameLane ? viewportSize.height : scaledLaneHeight
+            let rowScale = state.rowHeightScale(for: rowIndex)
+            let tallestPreferredHeight = laneColumns.compactMap { $0.row(atLaneIndex: rowIndex)?.preferredHeight }.max() ?? 0
+            let scaledLaneHeight = isExpandedActiveLane
+                ? viewportSize.height
+                : min(max(tallestPreferredHeight * rowScale, 0), viewportSize.height)
             let verticalInsets = laneInsets(
                 rowIndex: rowIndex,
                 laneCount: laneCount,
-                viewportHeight: laneFrameHeight,
-                usesFullFrameLane: usesFullFrameLane
+                viewportHeight: scaledLaneHeight,
+                usesFullFrameLane: isExpandedActiveLane
             )
-            let laneHeight = max(0, laneFrameHeight - verticalInsets.top - verticalInsets.bottom)
+            let laneFrameHeight = scaledLaneHeight + verticalInsets.top + verticalInsets.bottom
 
             for column in laneColumns {
                 guard let row = column.row(atLaneIndex: rowIndex) else { continue }
-                let preferredWidth = max(
-                    metrics.defaultColumnWidth,
-                    viewportSize.width * metrics.regularColumnWidthFraction
-                )
-                let baseWidth = max(column.width, preferredWidth)
+                let baseWidth = max(column.width, metrics.defaultColumnWidth)
                 let isFocused = state.focus.columnID == column.id && state.focus.rowID == row.id
                 let paneWidth = baseWidth * state.paneWidthScale(for: row.id)
                 let rect: CGRect
 
-                if usesFullFrameLane {
-                    if isExpandedActiveLane && !isFocused {
-                        rect = CGRect(
-                            x: xCursor,
-                            y: verticalInsets.top,
-                            width: baseWidth,
-                            height: max(row.preferredHeight, laneHeight)
-                        )
-                        xCursor += baseWidth + metrics.interColumnSpacing
-                    } else {
-                        rect = CGRect(
-                            x: 0,
-                            y: 0,
-                            width: viewportSize.width,
-                            height: viewportSize.height
-                        )
-                        xCursor = viewportSize.width + metrics.interColumnSpacing
-                    }
+                let width: CGFloat
+                if isExpandedActiveLane && isFocused {
+                    width = viewportSize.width
                 } else {
-                    let width: CGFloat
                     switch state.viewportMode {
                     case .standard:
                         width = paneWidth
@@ -337,14 +318,19 @@ public struct WorkspaceLayoutEngine: Sendable {
                             width = paneWidth
                         }
                     }
-                    rect = CGRect(
-                        x: xCursor,
-                        y: verticalInsets.top,
-                        width: width,
-                        height: max(row.preferredHeight, laneHeight)
-                    )
-                    xCursor += width + metrics.interColumnSpacing
                 }
+                if usesSinglePaneLane && spaces.isEmpty && !isExpandedActiveLane && metrics.alwaysCenterFocusedPaneHorizontally {
+                    xCursor = max((viewportSize.width - width) / 2, 0)
+                }
+                rect = CGRect(
+                    x: xCursor,
+                    y: isExpandedActiveLane && isFocused ? 0 : verticalInsets.top,
+                    width: width,
+                    height: isExpandedActiveLane && isFocused
+                        ? viewportSize.height
+                        : min(max(row.preferredHeight * rowScale, 0), viewportSize.height)
+                )
+                xCursor += width + metrics.interColumnSpacing
                 spaces.append(
                     LaneSpaceLayout(
                         columnID: column.id,
@@ -357,44 +343,84 @@ public struct WorkspaceLayoutEngine: Sendable {
             }
 
             let rememberedColumnID = state.rememberedColumnByRowIndex[rowIndex] ?? laneColumns.first?.id
-            let targetSpace = spaces.first(where: { $0.columnID == rememberedColumnID }) ?? spaces.first
-            let contentWidth = max(spaces.map { $0.rect.maxX }.max() ?? viewportSize.width, viewportSize.width)
-            let targetOffsetX = usesFullFrameLane ? 0 : (targetSpace.map { offsetToCenter(frame: $0.rect, viewportSize: viewportSize) } ?? 0)
+            var adjustedSpaces = spaces
+            var horizontalBleed: CGFloat = 0
+            let centeringColumnID: WorkspaceColumn.ID? = {
+                guard metrics.alwaysCenterFocusedPaneHorizontally,
+                      !usesSinglePaneLane,
+                      !isExpandedActiveLane else {
+                    return nil
+                }
+
+                if rowIndex == state.activeRowIndex {
+                    return state.focus.columnID
+                }
+
+                return rememberedColumnID
+            }()
+
+            if let centeringColumnID,
+               let centeredSpace = adjustedSpaces.first(where: { $0.columnID == centeringColumnID }) {
+                horizontalBleed = max((viewportSize.width - centeredSpace.rect.width) / 2, 0)
+                adjustedSpaces = adjustedSpaces.map { space in
+                    LaneSpaceLayout(
+                        columnID: space.columnID,
+                        rowID: space.rowID,
+                        rect: space.rect.offsetBy(dx: horizontalBleed, dy: 0),
+                        isFocused: space.isFocused,
+                        baseWidth: space.baseWidth
+                    )
+                }
+            }
+
+            let targetSpace: LaneSpaceLayout?
+            if let centeringColumnID {
+                targetSpace = adjustedSpaces.first(where: { $0.columnID == centeringColumnID })
+            } else {
+                targetSpace = adjustedSpaces.first(where: { $0.columnID == rememberedColumnID }) ?? adjustedSpaces.first
+            }
+
+            let contentWidth = max(
+                (adjustedSpaces.map { $0.rect.maxX }.max() ?? viewportSize.width) + horizontalBleed,
+                viewportSize.width
+            )
+            let targetOffsetX = targetSpace.map { offsetToCenter(frame: $0.rect, viewportSize: viewportSize) } ?? 0
             let maxOffsetX = max(0, contentWidth - viewportSize.width)
             let clampedOffsetX = min(max(0, targetOffsetX), maxOffsetX)
 
             return LaneLayout(
                 rowIndex: rowIndex,
-                originY: originY(for: rowIndex, regularLaneHeight: regularLaneHeight, state: state, viewportHeight: viewportSize.height),
+                originY: originY(for: rowIndex, state: state, viewportHeight: viewportSize.height),
                 frameHeight: laneFrameHeight,
                 contentWidth: contentWidth,
                 contentOffsetX: clampedOffsetX,
                 topInset: verticalInsets.top,
                 bottomInset: verticalInsets.bottom,
                 scrollTargetSpaceID: targetSpace?.rowID,
-                spaces: spaces
+                spaces: adjustedSpaces
             )
         }
     }
 
     private func originY(
         for rowIndex: Int,
-        regularLaneHeight: CGFloat,
         state: WorkspaceState,
         viewportHeight: CGFloat
     ) -> CGFloat {
         var cursor: CGFloat = 0
         for priorRowIndex in 0..<rowIndex {
             let laneColumns = state.columns(forRowIndex: priorRowIndex)
-            let usesFullFrameLane = (priorRowIndex == state.activeRowIndex && {
-                    guard case .expandedSpaces(let expanded) = state.viewportMode else { return false }
-                    return expanded.contains(state.focus.rowID)
-                }())
-            let scaledLaneHeight = max(
-                viewportHeight * state.rowHeightScale(for: priorRowIndex),
-                viewportHeight * WorkspaceState.minimumWorkspaceScale
+            let rowScale = state.rowHeightScale(for: priorRowIndex)
+            let tallestPreferredHeight = laneColumns.compactMap { $0.row(atLaneIndex: priorRowIndex)?.preferredHeight }.max() ?? 0
+            let scaledLaneHeight = min(max(tallestPreferredHeight * rowScale, 0),  viewportHeight)
+            let verticalInsets = laneInsets(
+                rowIndex: priorRowIndex,
+                laneCount: max(state.maxRowCount, 1),
+                viewportHeight: scaledLaneHeight,
+                usesFullFrameLane: false
             )
-            cursor += usesFullFrameLane ? regularLaneHeight : scaledLaneHeight
+            let laneFrameHeight = scaledLaneHeight + verticalInsets.top + verticalInsets.bottom
+            cursor += laneFrameHeight
             if priorRowIndex < rowIndex {
                 cursor += metrics.interRowSpacing
             }

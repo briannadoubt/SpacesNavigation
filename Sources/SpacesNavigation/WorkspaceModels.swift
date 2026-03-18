@@ -2,12 +2,19 @@ import CoreGraphics
 import Foundation
 
 public struct WorkspaceRow: Identifiable, Hashable, Sendable {
+    public static let defaultPreferredHeight: CGFloat = 540
+
     public let id: UUID
     public var title: String
     public var preferredHeight: CGFloat
     public var laneIndex: Int
 
-    public init(id: UUID = UUID(), title: String, preferredHeight: CGFloat = 320, laneIndex: Int = -1) {
+    public init(
+        id: UUID = UUID(),
+        title: String,
+        preferredHeight: CGFloat = WorkspaceRow.defaultPreferredHeight,
+        laneIndex: Int = -1
+    ) {
         self.id = id
         self.title = title
         self.preferredHeight = preferredHeight
@@ -65,7 +72,8 @@ public enum WorkspaceViewportMode: Hashable, Sendable {
 
 public struct WorkspaceState: Hashable, Sendable {
     public static let minimumWorkspaceScale: CGFloat = 0.3
-    public static let maximumWorkspaceScale: CGFloat = 1.0
+    public static let defaultWorkspaceScale: CGFloat = 1.0
+    public static let maximumWorkspaceScale: CGFloat = 3.0
     public static let workspaceScaleStep: CGFloat = 0.1
     public static let minimumFocusedPaneWidthScale: CGFloat = 0.5
     public static let maximumFocusedPaneWidthScale: CGFloat = 1.5
@@ -296,7 +304,7 @@ public struct WorkspaceState: Hashable, Sendable {
     }
 
     public func rowHeightScale(for rowIndex: Int) -> CGFloat {
-        rowHeightScaleByRowIndex[rowIndex] ?? WorkspaceState.minimumWorkspaceScale
+        rowHeightScaleByRowIndex[rowIndex] ?? WorkspaceState.defaultWorkspaceScale
     }
 
     private mutating func focusRow(at rowIndex: Int) {
@@ -424,7 +432,7 @@ public struct WorkspaceState: Hashable, Sendable {
         var seeded: [Int: CGFloat] = [:]
 
         for rowIndex in validRowIndices {
-            seeded[rowIndex] = rowHeightScaleByRowIndex[rowIndex, default: WorkspaceState.minimumWorkspaceScale].clamped(
+            seeded[rowIndex] = rowHeightScaleByRowIndex[rowIndex, default: WorkspaceState.defaultWorkspaceScale].clamped(
                 to: WorkspaceState.minimumWorkspaceScale...WorkspaceState.maximumWorkspaceScale
             )
         }

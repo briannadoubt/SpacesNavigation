@@ -44,7 +44,7 @@ struct WorkspaceLayoutTests {
         for _ in 0..<10 {
             state.perform(.zoomWorkspaceIn)
         }
-        #expect(abs(state.rowHeightScale(for: firstRowIndex) - 1.0) < 0.0001)
+        #expect(abs(state.rowHeightScale(for: firstRowIndex) - 1.3) < 0.0001)
         #expect(abs(state.rowHeightScale(for: 1) - 1.0) < 0.0001)
     }
 
@@ -117,10 +117,10 @@ struct WorkspaceLayoutTests {
         let firstLane = try! #require(snapshot.lanes.first)
 
         #expect(snapshot.contentRect.height > 400)
-        #expect(snapshot.contentOffsetY == 0)
-        #expect(firstLane.frame.minY == 0)
-        #expect(firstLane.frame.height == 400)
-        #expect(snapshot.lanes.last?.frame.minY == 800)
+        #expect(snapshot.contentOffsetY == 14)
+        #expect(firstLane.frame.minY == -14)
+        #expect(firstLane.frame.height == 428)
+        #expect(snapshot.lanes.last?.frame.minY == 870)
     }
 
     @Test
@@ -136,7 +136,7 @@ struct WorkspaceLayoutTests {
 
         let visibleMidY = activeLane.frame.minY + activeRow.rect.midY
         #expect(abs(visibleMidY - 200) < 0.5)
-        #expect(abs(activeRow.rect.height - 344) < 0.5)
+        #expect(abs(activeRow.rect.height - 400) < 0.5)
     }
 
     @Test
@@ -150,7 +150,7 @@ struct WorkspaceLayoutTests {
         let snapshot = engine.snapshot(for: state, viewportSize: CGSize(width: 1200, height: 700))
 
         #expect(snapshot.contentRect.width > 1200)
-        #expect(snapshot.lanes.allSatisfy { lane in lane.spaces.allSatisfy { abs($0.rect.width - 800) < 0.5 } })
+        #expect(snapshot.lanes.allSatisfy { lane in lane.spaces.allSatisfy { abs($0.rect.width - 640) < 0.5 } })
     }
 
     @Test
@@ -162,7 +162,27 @@ struct WorkspaceLayoutTests {
         let activeLane = try! #require(snapshot.lanes.first(where: { $0.id == state.activeRowIndex }))
         let activeRow = try! #require(activeLane.spaces.first(where: { $0.id == state.focus.rowID }))
 
-        #expect(abs(activeRow.rect.width - (1400 * (2.0 / 3.0))) < 0.5)
+        #expect(abs(activeRow.rect.width - 720) < 0.5)
+    }
+
+    @Test
+    func alwaysCenterFocusedPaneKeepsFocusedPaneCenteredWithSiblings() {
+        let engine = WorkspaceLayoutEngine(
+            metrics: WorkspaceLayoutMetrics(
+                defaultColumnWidth: 640,
+                alwaysCenterFocusedPaneHorizontally: true
+            )
+        )
+        let state = sampleState()
+
+        let snapshot = engine.snapshot(for: state, viewportSize: CGSize(width: 1400, height: 800))
+        let activeLane = try! #require(snapshot.lanes.first(where: { $0.id == state.activeRowIndex }))
+        let activeRow = try! #require(activeLane.spaces.first(where: { $0.id == state.focus.rowID }))
+
+        #expect(activeLane.scrollTargetSpaceID == state.focus.rowID)
+        #expect(activeLane.contentOffsetX == 0)
+        #expect(abs(activeRow.rect.minX - 340) < 0.5)
+        #expect(abs(activeRow.rect.width - 720) < 0.5)
     }
 
     @Test
@@ -179,11 +199,11 @@ struct WorkspaceLayoutTests {
         let bottomRow = try! #require(bottomLane.spaces.first)
 
         #expect(topRow.rect.minY == 0)
-        #expect(abs(topRow.rect.height - 770) < 0.5)
+        #expect(abs(topRow.rect.height - 540) < 0.5)
         #expect(abs(middleRow.rect.minY - 30) < 0.5)
-        #expect(abs(middleRow.rect.height - 740) < 0.5)
+        #expect(abs(middleRow.rect.height - 540) < 0.5)
         #expect(abs(bottomRow.rect.minY - 30) < 0.5)
-        #expect(abs(bottomRow.rect.height - 770) < 0.5)
+        #expect(abs(bottomRow.rect.height - 540) < 0.5)
     }
 
     @Test
@@ -202,11 +222,11 @@ struct WorkspaceLayoutTests {
         #expect(abs(activeRow.rect.width - 1400) < 0.5)
         #expect(abs(activeRow.rect.height - 800) < 0.5)
         let siblingRow = try! #require(activeLane.spaces.first(where: { $0.id != state.focus.rowID }))
-        #expect(abs(siblingRow.rect.width - (1400 * (2.0 / 3.0))) < 0.5)
+        #expect(abs(siblingRow.rect.width - 720) < 0.5)
     }
 
     @Test
-    func singlePaneRowFillsTheViewportWithoutZoom() {
+    func singlePaneRowKeepsItsPaneWidthWithoutZoom() {
         let engine = WorkspaceLayoutEngine(metrics: WorkspaceLayoutMetrics(defaultColumnWidth: 640, verticalRowPeek: 30))
         let columns = [
             WorkspaceColumn(width: 720, rows: [
@@ -226,9 +246,9 @@ struct WorkspaceLayoutTests {
 
         #expect(secondLane.contentOffsetX == 0)
         #expect(onlyRow.rect.minX == 0)
-        #expect(onlyRow.rect.minY == 0)
-        #expect(abs(onlyRow.rect.width - 1400) < 0.5)
-        #expect(abs(onlyRow.rect.height - 800) < 0.5)
+        #expect(onlyRow.rect.minY == 30)
+        #expect(abs(onlyRow.rect.width - 720) < 0.5)
+        #expect(abs(onlyRow.rect.height - 540) < 0.5)
     }
 
     @Test
@@ -247,8 +267,8 @@ struct WorkspaceLayoutTests {
 
         #expect(topLane.frame.height <= 320)
         #expect(lowerLane.frame.minY < 400)
-        #expect(abs(topRow.rect.width - (1400 * (2.0 / 3.0))) < 0.5)
-        #expect(lowerRow.rect.height > 320)
+        #expect(abs(topRow.rect.width - 720) < 0.5)
+        #expect(lowerRow.rect.height == 540)
     }
 
     @Test
@@ -272,10 +292,10 @@ struct WorkspaceLayoutTests {
         let firstRow = try! #require(firstLane.spaces.first)
         let secondRow = try! #require(secondLane.spaces.first)
 
-        #expect(abs(firstLane.frame.height - 640) < 0.5)
-        #expect(abs(firstRow.rect.height - 612) < 0.5)
-        #expect(abs(secondLane.frame.height - 720) < 0.5)
-        #expect(abs(secondRow.rect.height - 664) < 0.5)
+        #expect(abs(firstLane.frame.height - 460) < 0.5)
+        #expect(abs(firstRow.rect.height - 432) < 0.5)
+        #expect(abs(secondLane.frame.height - 542) < 0.5)
+        #expect(abs(secondRow.rect.height - 486) < 0.5)
     }
 
     @Test
@@ -311,8 +331,8 @@ struct WorkspaceLayoutTests {
         let focusedRow = try! #require(lane.spaces.first(where: { $0.id == state.focus.rowID }))
         let siblingRow = try! #require(lane.spaces.first(where: { $0.id != state.focus.rowID }))
 
-        #expect(abs(focusedRow.rect.width - ((1400 * (2.0 / 3.0)) * 1.1)) < 0.5)
-        #expect(abs(siblingRow.rect.width - (1400 * (2.0 / 3.0))) < 0.5)
+        #expect(abs(focusedRow.rect.width - 792) < 0.5)
+        #expect(abs(siblingRow.rect.width - 720) < 0.5)
     }
 
     @Test
@@ -336,8 +356,8 @@ struct WorkspaceLayoutTests {
         let firstRow = try! #require(lane.spaces.first(where: { $0.id == firstRowID }))
         let secondRow = try! #require(lane.spaces.first(where: { $0.id == secondRowID }))
 
-        #expect(abs(firstRow.rect.width - ((1400 * (2.0 / 3.0)) * 1.1)) < 0.5)
-        #expect(abs(secondRow.rect.width - ((1400 * (2.0 / 3.0)) * 0.9)) < 0.5)
+        #expect(abs(firstRow.rect.width - 792) < 0.5)
+        #expect(abs(secondRow.rect.width - 648) < 0.5)
     }
 
     @Test
@@ -384,7 +404,7 @@ struct WorkspaceLayoutTests {
         let originalRow = try! #require(originalLane.spaces.first(where: { $0.id == originalFocus.rowID }))
 
         #expect(abs(originalRow.rect.width - 1288) < 0.5)
-        #expect(abs(focusedRow.rect.width - (1400 * (2.0 / 3.0))) < 0.5)
+        #expect(abs(focusedRow.rect.width - 720) < 0.5)
     }
 
     @Test
@@ -402,7 +422,7 @@ struct WorkspaceLayoutTests {
         let originalLane = try! #require(snapshot.lanes.first(where: { lane in lane.spaces.contains(where: { $0.id == originalFocus.rowID }) }))
         let originalRow = try! #require(originalLane.spaces.first(where: { $0.id == originalFocus.rowID }))
 
-        #expect(abs(activeRow.rect.width - (1400 * (2.0 / 3.0))) < 0.5)
+        #expect(abs(activeRow.rect.width - 720) < 0.5)
         #expect(abs(originalRow.rect.width - 1288) < 0.5)
     }
 
@@ -422,8 +442,8 @@ struct WorkspaceLayoutTests {
         let firstRow = try! #require(lane.spaces.first(where: { $0.id == firstExpandedID }))
         let secondRow = try! #require(lane.spaces.first(where: { $0.id == secondExpandedID }))
 
-        #expect(abs(firstRow.rect.width - (1400 * (2.0 / 3.0))) < 0.5)
-        #expect(secondRow.rect.minX == 0)
+        #expect(abs(firstRow.rect.width - 1288) < 0.5)
+        #expect(abs(secondRow.rect.minX - 1316) < 0.5)
         #expect(abs(secondRow.rect.width - 1400) < 0.5)
     }
 
