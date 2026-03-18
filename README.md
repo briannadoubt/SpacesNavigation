@@ -26,15 +26,15 @@ The result is closer to a moving strip of tiled workspaces than a general-purpos
 
 ## Package Layout
 
-- [/Users/bri/dev/SpacesNavigation/Sources/SpacesNavigation/WorkspaceModels.swift](/Users/bri/dev/SpacesNavigation/Sources/SpacesNavigation/WorkspaceModels.swift)
+- [Sources/SpacesNavigation/WorkspaceModels.swift](Sources/SpacesNavigation/WorkspaceModels.swift)
   Core model types and commands such as `WorkspaceColumn`, `WorkspaceRow`, `WorkspaceFocus`, and `WorkspaceState`.
-- [/Users/bri/dev/SpacesNavigation/Sources/SpacesNavigation/WorkspaceLayoutEngine.swift](/Users/bri/dev/SpacesNavigation/Sources/SpacesNavigation/WorkspaceLayoutEngine.swift)
+- [Sources/SpacesNavigation/WorkspaceLayoutEngine.swift](Sources/SpacesNavigation/WorkspaceLayoutEngine.swift)
   Deterministic frame computation for rows, panes, offsets, and viewport snapshots.
-- [/Users/bri/dev/SpacesNavigation/Sources/SpacesNavigation/WorkspaceView.swift](/Users/bri/dev/SpacesNavigation/Sources/SpacesNavigation/WorkspaceView.swift)
+- [Sources/SpacesNavigation/WorkspaceView.swift](Sources/SpacesNavigation/WorkspaceView.swift)
   SwiftUI renderer that places panes from computed frames and hooks up keyboard commands.
-- [/Users/bri/dev/SpacesNavigation/Sources/SpacesNavigation/WorkspaceStore.swift](/Users/bri/dev/SpacesNavigation/Sources/SpacesNavigation/WorkspaceStore.swift)
+- [Sources/SpacesNavigation/WorkspaceStore.swift](Sources/SpacesNavigation/WorkspaceStore.swift)
   Observable store for integrating the workspace into an app.
-- [/Users/bri/dev/SpacesNavigation/Tests/SpacesNavigationTests/WorkspaceLayoutTests.swift](/Users/bri/dev/SpacesNavigation/Tests/SpacesNavigationTests/WorkspaceLayoutTests.swift)
+- [Tests/SpacesNavigationTests/WorkspaceLayoutTests.swift](Tests/SpacesNavigationTests/WorkspaceLayoutTests.swift)
   Regression coverage for focus movement, insertion, closing, overflow, independent row memory, persistent pane width, and persistent row height.
 
 ## Installation
@@ -43,9 +43,11 @@ Add the package as a local or remote Swift Package dependency:
 
 ```swift
 dependencies: [
-    .package(path: "/Users/bri/dev/SpacesNavigation")
+    .package(path: "../SpacesNavigation")
 ]
 ```
+
+Replace `../SpacesNavigation` with the relative path from your app to this repository, or use the repository URL as a remote package dependency.
 
 Then add the product to your target:
 
@@ -152,7 +154,7 @@ The package wires these commands in `WorkspaceView`:
 
 ## Demo App
 
-A standalone macOS demo app lives in [/Users/bri/dev/SpacesNavigation/DemoApp](/Users/bri/dev/SpacesNavigation/DemoApp).
+A standalone macOS demo app lives in [DemoApp](DemoApp).
 
 It shows how to:
 
@@ -163,9 +165,9 @@ It shows how to:
 
 Key files:
 
-- [/Users/bri/dev/SpacesNavigation/DemoApp/Sources/DemoRootView.swift](/Users/bri/dev/SpacesNavigation/DemoApp/Sources/DemoRootView.swift)
-- [/Users/bri/dev/SpacesNavigation/DemoApp/Sources/DemoSettingsView.swift](/Users/bri/dev/SpacesNavigation/DemoApp/Sources/DemoSettingsView.swift)
-- [/Users/bri/dev/SpacesNavigation/DemoApp/Sources/SpacesNavigationDemoApp.swift](/Users/bri/dev/SpacesNavigation/DemoApp/Sources/SpacesNavigationDemoApp.swift)
+- [DemoApp/Sources/DemoRootView.swift](DemoApp/Sources/DemoRootView.swift)
+- [DemoApp/Sources/DemoSettingsView.swift](DemoApp/Sources/DemoSettingsView.swift)
+- [DemoApp/Sources/SpacesNavigationDemoApp.swift](DemoApp/Sources/SpacesNavigationDemoApp.swift)
 
 Build the package tests:
 
@@ -176,7 +178,7 @@ swift test
 Build the demo app:
 
 ```bash
-xcodebuild -project /Users/bri/dev/SpacesNavigation/DemoApp/SpacesNavigationDemoApp.xcodeproj -scheme SpacesNavigationDemoApp -configuration Debug build
+xcodebuild -project DemoApp/SpacesNavigationDemoApp.xcodeproj -scheme SpacesNavigationDemoApp -configuration Debug build
 ```
 
 ## Current Scope
