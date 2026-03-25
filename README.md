@@ -111,6 +111,9 @@ swift test
 Build the demo app:
 
 ```bash
+cd DemoApp
+xcodegen generate
+cd ..
 xcodebuild -project DemoApp/SpacesNavigationDemoApp.xcodeproj -scheme SpacesNavigationDemoApp -configuration Debug CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY="" build
 ```
 

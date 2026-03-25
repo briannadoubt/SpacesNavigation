@@ -26,5 +26,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode.app
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate Demo Project
+        working-directory: DemoApp
+        run: xcodegen generate
       - name: Build Demo App
         run: xcodebuild -project DemoApp/SpacesNavigationDemoApp.xcodeproj -scheme SpacesNavigationDemoApp -configuration Debug CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY="" build
