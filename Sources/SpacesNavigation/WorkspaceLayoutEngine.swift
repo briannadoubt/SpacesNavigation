@@ -219,7 +219,7 @@ public struct WorkspaceLayoutEngine: Sendable {
                     frame: CGRect(
                         x: space.rect.minX - lane.contentOffsetX,
                         y: lane.originY - clampedOffsetY,
-                        width: max(space.baseWidth, 0),
+                        width: max(space.rect.width, 0),
                         height: viewportSize.height
                     ),
                     rows: [
@@ -304,21 +304,22 @@ public struct WorkspaceLayoutEngine: Sendable {
                 let paneWidth = baseWidth * state.paneWidthScale(for: row.id)
                 let rect: CGRect
 
-                let width: CGFloat
+                let desiredWidth: CGFloat
                 if isExpandedActiveLane && isFocused {
-                    width = viewportSize.width
+                    desiredWidth = viewportSize.width
                 } else {
                     switch state.viewportMode {
                     case .standard:
-                        width = paneWidth
+                        desiredWidth = paneWidth
                     case .expandedSpaces(let expanded):
                         if expanded.contains(row.id) {
-                            width = zoomedWidth
+                            desiredWidth = zoomedWidth
                         } else {
-                            width = paneWidth
+                            desiredWidth = paneWidth
                         }
                     }
                 }
+                let width = clampedPaneWidth(desiredWidth, viewportWidth: viewportSize.width)
                 if usesSinglePaneLane && spaces.isEmpty && !isExpandedActiveLane && metrics.alwaysCenterFocusedPaneHorizontally {
                     xCursor = max((viewportSize.width - width) / 2, 0)
                 }
@@ -468,5 +469,9 @@ public struct WorkspaceLayoutEngine: Sendable {
             return (peek, 0)
         }
         return (peek, peek)
+    }
+
+    private func clampedPaneWidth(_ desiredWidth: CGFloat, viewportWidth: CGFloat) -> CGFloat {
+        min(max(desiredWidth, 0), max(viewportWidth, 0))
     }
 }

@@ -154,6 +154,47 @@ struct WorkspaceLayoutTests {
     }
 
     @Test
+    func paneWidthsRetainModeledSizeUntilViewportClamp() {
+        let engine = WorkspaceLayoutEngine(metrics: WorkspaceLayoutMetrics(defaultColumnWidth: 640))
+        let columns = [
+            WorkspaceColumn(width: 720, rows: [WorkspaceRow(title: "Retained")]),
+            WorkspaceColumn(width: 1600, rows: [WorkspaceRow(title: "Clamped")])
+        ]
+        let focus = WorkspaceFocus(columnID: columns[0].id, rowID: columns[0].rows[0].id)
+        let state = WorkspaceState(columns: columns, focus: focus)
+
+        let snapshot = engine.snapshot(for: state, viewportSize: CGSize(width: 1000, height: 700))
+        let lane = try! #require(snapshot.lanes.first(where: { $0.id == 0 }))
+        let retainedRow = try! #require(lane.spaces.first(where: { $0.id == columns[0].rows[0].id }))
+        let clampedRow = try! #require(lane.spaces.first(where: { $0.id == columns[1].rows[0].id }))
+
+        #expect(abs(retainedRow.rect.width - 720) < 0.5)
+        #expect(abs(clampedRow.rect.width - 1000) < 0.5)
+    }
+
+    @Test
+    func rowHeightsRetainModeledSizeUntilViewportClamp() {
+        let engine = WorkspaceLayoutEngine(metrics: WorkspaceLayoutMetrics(defaultColumnWidth: 640))
+        let columns = [
+            WorkspaceColumn(width: 720, rows: [
+                WorkspaceRow(title: "Retained", preferredHeight: 320, laneIndex: 0),
+                WorkspaceRow(title: "Clamped", preferredHeight: 900, laneIndex: 1)
+            ])
+        ]
+        let focus = WorkspaceFocus(columnID: columns[0].id, rowID: columns[0].rows[0].id)
+        let state = WorkspaceState(columns: columns, focus: focus)
+
+        let snapshot = engine.snapshot(for: state, viewportSize: CGSize(width: 1000, height: 700))
+        let retainedLane = try! #require(snapshot.lanes.first(where: { $0.id == 0 }))
+        let clampedLane = try! #require(snapshot.lanes.first(where: { $0.id == 1 }))
+        let retainedRow = try! #require(retainedLane.spaces.first)
+        let clampedRow = try! #require(clampedLane.spaces.first)
+
+        #expect(abs(retainedRow.rect.height - 320) < 0.5)
+        #expect(abs(clampedRow.rect.height - 700) < 0.5)
+    }
+
+    @Test
     func focusedSpaceIsNotZoomedInStandardMode() {
         let engine = WorkspaceLayoutEngine(metrics: WorkspaceLayoutMetrics(defaultColumnWidth: 640, zoomedColumnWidthFraction: 0.92))
         let state = sampleState()

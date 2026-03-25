@@ -1,55 +1,32 @@
+[![CI](https://github.com/briannadoubt/SpacesNavigation/actions/workflows/ci.yml/badge.svg)](https://github.com/briannadoubt/SpacesNavigation/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-black.svg)](LICENSE)
+
 # SpacesNavigation
 
-`SpacesNavigation` is a Swift package for building a keyboard-first macOS workspace that feels spatial instead of grid-like.
+`SpacesNavigation` is a Swift package for building keyboard-first macOS workspaces that feel spatial instead of grid-like.
 
-It renders a row-first tiling workspace where:
+It models a row-first tiling workspace where:
 
 - panes live in horizontal strips
-- each row keeps its own horizontal offset
-- vertical navigation moves between independently offset rows
-- each pane can keep its own width
-- each row can keep its own height
-- expanded panes persist independently
+- each row keeps its own horizontal position memory
+- vertical movement returns to that row’s remembered pane instead of snapping globally
+- pane widths and row heights persist independently
+- expanded panes remain expanded until explicitly toggled off
 
-The package owns the workspace model, layout engine, viewport math, and keyboard command plumbing. Visual styling is left to the host app through a view builder.
+The package owns workspace state, layout math, viewport behavior, and command handling. The host app owns rendering and product-specific chrome.
 
-## What It Feels Like
+## Requirements
 
-This package is designed for terminal-style workspaces where keyboard navigation is the source of truth.
-
-- `Cmd+Left` and `Cmd+Right` move across panes in the current row
-- `Cmd+Up` and `Cmd+Down` move between rows while preserving each row's remembered horizontal position
-- the focused pane stays spatially anchored by viewport movement
-- distant panes overflow offscreen instead of shrinking into a dashboard or grid
-
-The result is closer to a moving strip of tiled workspaces than a general-purpose pane grid.
-
-## Package Layout
-
-- [Sources/SpacesNavigation/WorkspaceModels.swift](Sources/SpacesNavigation/WorkspaceModels.swift)
-  Core model types and commands such as `WorkspaceColumn`, `WorkspaceRow`, `WorkspaceFocus`, and `WorkspaceState`.
-- [Sources/SpacesNavigation/WorkspaceLayoutEngine.swift](Sources/SpacesNavigation/WorkspaceLayoutEngine.swift)
-  Deterministic frame computation for rows, panes, offsets, and viewport snapshots.
-- [Sources/SpacesNavigation/WorkspaceView.swift](Sources/SpacesNavigation/WorkspaceView.swift)
-  SwiftUI renderer that places panes from computed frames and hooks up keyboard commands.
-- [Sources/SpacesNavigation/WorkspaceStore.swift](Sources/SpacesNavigation/WorkspaceStore.swift)
-  Observable store for integrating the workspace into an app.
-- [Tests/SpacesNavigationTests/WorkspaceLayoutTests.swift](Tests/SpacesNavigationTests/WorkspaceLayoutTests.swift)
-  Regression coverage for focus movement, insertion, closing, overflow, independent row memory, persistent pane width, and persistent row height.
+- macOS 14+
+- Xcode 16+ / Swift 6+
 
 ## Installation
 
-Add the package as a local or remote Swift Package dependency:
-
 ```swift
 dependencies: [
-    .package(path: "../SpacesNavigation")
+    .package(url: "https://github.com/briannadoubt/SpacesNavigation.git", branch: "main")
 ]
 ```
-
-Replace `../SpacesNavigation` with the relative path from your app to this repository, or use the repository URL as a remote package dependency.
-
-Then add the product to your target:
 
 ```swift
 .product(name: "SpacesNavigation", package: "SpacesNavigation")
@@ -57,11 +34,9 @@ Then add the product to your target:
 
 ## Basic Usage
 
-Create a workspace state, wrap it in a store, and provide a pane view builder:
-
 ```swift
-import SwiftUI
 import SpacesNavigation
+import SwiftUI
 
 struct ExampleWorkspace: View {
     @State private var store = WorkspaceStore(
@@ -81,93 +56,51 @@ struct ExampleWorkspace: View {
     )
 
     var body: some View {
-        WorkspaceView(store: store) { column, row, isFocused in
-            ZStack(alignment: .topLeading) {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color(nsColor: .controlBackgroundColor))
-
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(
-                        isFocused ? Color.accentColor : Color.secondary.opacity(0.25),
-                        lineWidth: isFocused ? 2 : 1
-                    )
-
-                VStack(alignment: .leading, spacing: 8) {
+        WorkspaceView(store: store) { _, row, isFocused in
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color(nsColor: .controlBackgroundColor))
+                .overlay(alignment: .topLeading) {
                     Text(row.title)
-                        .font(.headline)
-                    Text("Column: \(column.id.uuidString.prefix(8))")
-                        .font(.caption.monospaced())
-                        .foregroundStyle(.secondary)
+                        .padding(16)
                 }
-                .padding(16)
-            }
+                .overlay {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(
+                            isFocused ? Color.accentColor : Color.secondary.opacity(0.25),
+                            lineWidth: isFocused ? 2 : 1
+                        )
+                }
         }
     }
 }
 ```
 
-## Core Concepts
+## What It Covers
 
-### `WorkspaceColumn`
-
-A horizontal collection of panes. Columns are ordered and stable, but rows do not have to exist in every column.
-
-### `WorkspaceRow`
-
-A pane entry inside a column. Rows carry stable identity and lane placement through `laneIndex`.
-
-### Row-first navigation
-
-Each row lane remembers its own active column. If row 1 is centered on pane `c` and row 2 is centered on pane `a`, moving up and down returns to those remembered positions instead of snapping all rows to one shared horizontal scroll.
-
-### Persistent pane width
-
-Each pane stores its own width scale. Widening one pane does not widen its neighbors.
-
-### Persistent row height
-
-Each row stores its own height scale. Resizing one row does not resize every row in the workspace.
-
-### Expanded panes
-
-Expanded panes persist independently. A pane can remain expanded even after focus moves elsewhere.
+- `WorkspaceState` and its commands for navigation, insertion, closure, resizing, and zooming
+- `WorkspaceLayoutEngine` for deterministic lane, pane, and viewport snapshots
+- `WorkspaceView` for SwiftUI rendering with keyboard command plumbing
+- `WorkspaceStore` for app integration
 
 ## Keyboard Commands
-
-The package wires these commands in `WorkspaceView`:
 
 - `Cmd+Left`: focus previous pane in the current row
 - `Cmd+Right`: focus next pane in the current row
 - `Cmd+Up`: focus row above
 - `Cmd+Down`: focus row below
-- `Cmd+[`: move current column left
-- `Cmd+]`: move current column right
+- `Cmd+[`: move the current pane left
+- `Cmd+]`: move the current pane right
 - `Cmd+T`: create a pane to the right of the active pane
-- `Cmd+W`: close active pane
+- `Cmd+W`: close the active pane
 - `Cmd+Return`: toggle expansion for the focused pane
 - `Cmd+Shift+Up`: shrink the focused row height by 10%
 - `Cmd+Shift+Down`: grow the focused row height by 10%
-- `Cmd+Shift+Option+Up`: alias for shrinking the focused row height
-- `Cmd+Shift+Option+Down`: alias for growing the focused row height
 - `Cmd+Shift+Left`: shrink the focused pane width by 10%
 - `Cmd+Shift+Right`: widen the focused pane width by 10%
 
 ## Demo App
 
-A standalone macOS demo app lives in [DemoApp](DemoApp).
-
-It shows how to:
-
-- host the package inside a `NavigationSplitView`
-- provide custom pane chrome with a view builder
-- keep app-specific row naming outside the package
-- expose a Settings window with the command list
-
-Key files:
-
-- [DemoApp/Sources/DemoRootView.swift](DemoApp/Sources/DemoRootView.swift)
-- [DemoApp/Sources/DemoSettingsView.swift](DemoApp/Sources/DemoSettingsView.swift)
-- [DemoApp/Sources/SpacesNavigationDemoApp.swift](DemoApp/Sources/SpacesNavigationDemoApp.swift)
+The repo includes a standalone macOS demo app in [DemoApp](DemoApp).
 
 Build the package tests:
 
@@ -178,25 +111,16 @@ swift test
 Build the demo app:
 
 ```bash
-xcodebuild -project DemoApp/SpacesNavigationDemoApp.xcodeproj -scheme SpacesNavigationDemoApp -configuration Debug build
+xcodebuild -project DemoApp/SpacesNavigationDemoApp.xcodeproj -scheme SpacesNavigationDemoApp -configuration Debug CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY="" build
 ```
 
-## Current Scope
+## Scope
 
-`SpacesNavigation` is focused on layout and interaction infrastructure, not terminal rendering.
+`SpacesNavigation` is intentionally focused on layout and interaction infrastructure. It does not render terminal content, dictate a design system, or own app-specific naming and sidebar logic.
 
-The package does:
+## License
 
-- model workspace state
-- compute frames deterministically
-- manage keyboard-first navigation
-- expose a SwiftUI container for rendering panes
-
-The package does not:
-
-- render terminal content
-- enforce a visual style
-- own app-specific naming or sidebar behavior
+MIT. See [LICENSE](LICENSE).
 
 ## Testing
 

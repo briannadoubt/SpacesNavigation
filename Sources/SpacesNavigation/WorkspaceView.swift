@@ -4,6 +4,7 @@ public struct WorkspaceView<RowContent: View>: View {
     @Bindable private var store: WorkspaceStore
     private let layoutEngine: WorkspaceLayoutEngine
     private let rowContent: (WorkspaceColumn, WorkspaceRow, Bool) -> RowContent
+    @State private var hasAppeared = false
 
     public init(
         store: WorkspaceStore,
@@ -33,19 +34,19 @@ public struct WorkspaceView<RowContent: View>: View {
                                     rowContent: rowContent
                                 )
                                 .id(lane.id)
-                                .frame(height: lane.contentFrame.height)
+                                .frame(height: max(lane.contentFrame.height, 0))
                             }
                         }
                     }
                     .scrollIndicators(.hidden)
                     .clipped()
                     .onAppear {
+                        hasAppeared = true
                         scrollToActiveLane(with: verticalReader, snapshot: snapshot, animated: false)
                     }
-                    .onChange(of: snapshot.activeLaneID) { _, _ in
-                        scrollToActiveLane(with: verticalReader, snapshot: snapshot, animated: true)
-                    }
-                    .onChange(of: snapshot.contentRect.height) { _, _ in
+                    .task(id: VerticalScrollKey(snapshot: snapshot)) {
+                        guard hasAppeared else { return }
+                        await Task.yield()
                         scrollToActiveLane(with: verticalReader, snapshot: snapshot, animated: true)
                     }
                 }
@@ -70,12 +71,23 @@ public struct WorkspaceView<RowContent: View>: View {
             action()
         }
     }
+
+    private struct VerticalScrollKey: Hashable {
+        let activeLaneID: Int
+        let contentHeight: CGFloat
+
+        init(snapshot: WorkspaceViewportSnapshot) {
+            activeLaneID = snapshot.activeLaneID
+            contentHeight = snapshot.contentRect.height
+        }
+    }
 }
 
 private struct WorkspaceLaneScrollView<RowContent: View>: View {
     let lane: WorkspaceLanePresentation
     let store: WorkspaceStore
     let rowContent: (WorkspaceColumn, WorkspaceRow, Bool) -> RowContent
+    @State private var hasAppeared = false
 
     var body: some View {
         ScrollViewReader { horizontalReader in
@@ -90,7 +102,10 @@ private struct WorkspaceLaneScrollView<RowContent: View>: View {
                         if let modelColumn = store.state.columns.first(where: { $0.id == space.columnID }),
                            let row = modelColumn.rows.first(where: { $0.id == space.id }) {
                             rowContent(modelColumn, row, space.isFocused)
-                                .frame(width: space.rect.width, height: space.rect.height)
+                                .frame(
+                                    width: max(space.rect.width, 0),
+                                    height: max(space.rect.height, 0)
+                                )
                                 .id(space.id)
                                 .zIndex(space.isFocused ? 2 : 0)
 
@@ -108,23 +123,17 @@ private struct WorkspaceLaneScrollView<RowContent: View>: View {
                 }
                 .padding(.top, lane.topInset)
                 .padding(.bottom, lane.bottomInset)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(width: max(lane.contentSize.width, 0), alignment: .leading)
             }
             .defaultScrollAnchor(.leading)
             .scrollIndicators(.hidden)
             .onAppear {
+                hasAppeared = true
                 scrollToTarget(with: horizontalReader, animated: false)
             }
-            .onChange(of: lane.scrollTargetSpaceID) { _, _ in
-                scrollToTarget(with: horizontalReader, animated: true)
-            }
-            .onChange(of: lane.contentSize.width) { _, _ in
-                scrollToTarget(with: horizontalReader, animated: true)
-            }
-            .onChange(of: lane.focusedSpaceID) { _, _ in
-                scrollToTarget(with: horizontalReader, animated: true)
-            }
-            .onChange(of: lane.contentOffsetX) { _, _ in
+            .task(id: HorizontalScrollKey(lane: lane)) {
+                guard hasAppeared else { return }
+                await Task.yield()
                 scrollToTarget(with: horizontalReader, animated: true)
             }
         }
@@ -153,7 +162,7 @@ private struct WorkspaceLaneScrollView<RowContent: View>: View {
         guard let target = lane.scrollTargetSpaceID else { return }
         guard lane.contentSize.width > lane.frame.width + 1 else { return }
         let action = {
-            reader.scrollTo(target, anchor: .center)
+            reader.scrollTo(target, anchor: .leading)
         }
 
         if animated {
@@ -162,6 +171,16 @@ private struct WorkspaceLaneScrollView<RowContent: View>: View {
             }
         } else {
             action()
+        }
+    }
+
+    private struct HorizontalScrollKey: Hashable {
+        let scrollTargetSpaceID: WorkspaceRow.ID?
+        let focusedSpaceID: WorkspaceRow.ID?
+
+        init(lane: WorkspaceLanePresentation) {
+            scrollTargetSpaceID = lane.scrollTargetSpaceID
+            focusedSpaceID = lane.focusedSpaceID
         }
     }
 }
