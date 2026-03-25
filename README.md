@@ -24,7 +24,7 @@ The package owns workspace state, layout math, viewport behavior, and command ha
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/briannadoubt/SpacesNavigation.git", branch: "main")
+    .package(url: "https://github.com/briannadoubt/SpacesNavigation.git", from: "0.1.0")
 ]
 ```
 
@@ -139,9 +139,3 @@ The test suite covers:
 - persistent per-pane width
 - persistent per-row height
 - safe close behavior when rows or panes disappear
-
-## Requirements
-
-- macOS 14+
-- Swift 6
-- Xcode 15+ recommended
