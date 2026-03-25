@@ -6,6 +6,10 @@ public struct WorkspaceView<RowContent: View>: View {
     private let rowContent: (WorkspaceColumn, WorkspaceRow, Bool) -> RowContent
     @State private var hasAppeared = false
 
+    private var verticalFocusScrollAnimation: Animation {
+        .snappy(duration: 0.12, extraBounce: 0)
+    }
+
     public init(
         store: WorkspaceStore,
         layoutEngine: WorkspaceLayoutEngine = WorkspaceLayoutEngine(),
@@ -23,6 +27,7 @@ public struct WorkspaceView<RowContent: View>: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 let snapshot = layoutEngine.snapshot(for: store.state, viewportSize: proxy.size)
+                let contentLookup = WorkspaceContentLookup(columns: store.state.columns)
 
                 ScrollViewReader { verticalReader in
                     ScrollView(.vertical) {
@@ -30,7 +35,7 @@ public struct WorkspaceView<RowContent: View>: View {
                             ForEach(snapshot.lanes) { lane in
                                 WorkspaceLaneScrollView(
                                     lane: lane,
-                                    store: store,
+                                    contentLookup: contentLookup,
                                     rowContent: rowContent
                                 )
                                 .id(lane.id)
@@ -39,15 +44,36 @@ public struct WorkspaceView<RowContent: View>: View {
                         }
                     }
                     .scrollIndicators(.hidden)
+                    .scrollDisabled(true)
                     .clipped()
                     .onAppear {
                         hasAppeared = true
-                        scrollToActiveLane(with: verticalReader, snapshot: snapshot, animated: false)
+                        WorkspacePerformanceSignpost.emit(
+                            WorkspacePerformancePhase.verticalScrollRequest,
+                            "phase=appear lane=\(snapshot.activeLaneID) animated=false offsetY=\(Int(snapshot.contentOffsetY.rounded()))"
+                        )
+                        scrollToActiveLane(with: verticalReader, snapshot: snapshot, animated: true)
                     }
                     .task(id: VerticalScrollKey(snapshot: snapshot)) {
-                        guard hasAppeared else { return }
+                        let interval = WorkspacePerformanceSignpost.begin(
+                            WorkspacePerformancePhase.verticalScrollTask,
+                            "lane=\(snapshot.activeLaneID) offsetY=\(Int(snapshot.contentOffsetY.rounded())) appeared=\(hasAppeared)"
+                        )
+                        var endMessage = "completed=false"
+                        defer {
+                            WorkspacePerformanceSignpost.end(interval, endMessage)
+                        }
+                        guard hasAppeared else {
+                            endMessage = "skipped=notAppeared lane=\(snapshot.activeLaneID)"
+                            return
+                        }
                         await Task.yield()
+                        if Task.isCancelled {
+                            endMessage = "cancelled=true lane=\(snapshot.activeLaneID)"
+                            return
+                        }
                         scrollToActiveLane(with: verticalReader, snapshot: snapshot, animated: true)
+                        endMessage = "cancelled=false lane=\(snapshot.activeLaneID) offsetY=\(Int(snapshot.contentOffsetY.rounded()))"
                     }
                 }
             }
@@ -59,12 +85,16 @@ public struct WorkspaceView<RowContent: View>: View {
         snapshot: WorkspaceViewportSnapshot,
         animated: Bool
     ) {
+        WorkspacePerformanceSignpost.emit(
+            WorkspacePerformancePhase.verticalScrollRequest,
+            "phase=commit lane=\(snapshot.activeLaneID) animated=\(animated) offsetY=\(Int(snapshot.contentOffsetY.rounded()))"
+        )
         let action = {
             reader.scrollTo(snapshot.activeLaneID, anchor: .center)
         }
 
         if animated {
-            withAnimation(.snappy(duration: 0.22)) {
+            withAnimation(verticalFocusScrollAnimation) {
                 action()
             }
         } else {
@@ -74,20 +104,47 @@ public struct WorkspaceView<RowContent: View>: View {
 
     private struct VerticalScrollKey: Hashable {
         let activeLaneID: Int
-        let contentHeight: CGFloat
+        let contentOffsetY: CGFloat
 
         init(snapshot: WorkspaceViewportSnapshot) {
             activeLaneID = snapshot.activeLaneID
-            contentHeight = snapshot.contentRect.height
+            contentOffsetY = snapshot.contentOffsetY
         }
+    }
+}
+
+private struct WorkspaceContentLookup {
+    private let columnsByID: [WorkspaceColumn.ID: WorkspaceColumn]
+    private let rowsByID: [WorkspaceRow.ID: WorkspaceRow]
+
+    init(columns: [WorkspaceColumn]) {
+        columnsByID = Dictionary(uniqueKeysWithValues: columns.map { ($0.id, $0) })
+        rowsByID = Dictionary(
+            uniqueKeysWithValues: columns.flatMap { column in
+                column.rows.map { ($0.id, $0) }
+            }
+        )
+    }
+
+    func resolve(space: WorkspaceSpacePresentation) -> (column: WorkspaceColumn, row: WorkspaceRow)? {
+        guard let column = columnsByID[space.columnID],
+              let row = rowsByID[space.id] else {
+            return nil
+        }
+
+        return (column, row)
     }
 }
 
 private struct WorkspaceLaneScrollView<RowContent: View>: View {
     let lane: WorkspaceLanePresentation
-    let store: WorkspaceStore
+    let contentLookup: WorkspaceContentLookup
     let rowContent: (WorkspaceColumn, WorkspaceRow, Bool) -> RowContent
     @State private var hasAppeared = false
+
+    private var horizontalFocusScrollAnimation: Animation {
+        .snappy(duration: 0.10, extraBounce: 0)
+    }
 
     var body: some View {
         ScrollViewReader { horizontalReader in
@@ -99,9 +156,8 @@ private struct WorkspaceLaneScrollView<RowContent: View>: View {
                     }
 
                     ForEach(lane.spaces) { space in
-                        if let modelColumn = store.state.columns.first(where: { $0.id == space.columnID }),
-                           let row = modelColumn.rows.first(where: { $0.id == space.id }) {
-                            rowContent(modelColumn, row, space.isFocused)
+                        if let resolved = contentLookup.resolve(space: space) {
+                            rowContent(resolved.column, resolved.row, space.isFocused)
                                 .frame(
                                     width: max(space.rect.width, 0),
                                     height: max(space.rect.height, 0)
@@ -127,13 +183,21 @@ private struct WorkspaceLaneScrollView<RowContent: View>: View {
             }
             .defaultScrollAnchor(.leading)
             .scrollIndicators(.hidden)
+            .scrollDisabled(true)
             .onAppear {
                 hasAppeared = true
-                scrollToTarget(with: horizontalReader, animated: false)
+                WorkspacePerformanceSignpost.emit(
+                    WorkspacePerformancePhase.horizontalScrollRequest,
+                    "phase=appear lane=\(lane.id) target=\(scrollTargetDescription) animated=false offsetX=\(Int(lane.contentOffsetX.rounded()))"
+                )
+                scrollToTarget(with: horizontalReader, animated: true)
             }
-            .task(id: HorizontalScrollKey(lane: lane)) {
+            .onChange(of: HorizontalScrollKey(lane: lane)) { _, key in
+                WorkspacePerformanceSignpost.emit(
+                    WorkspacePerformancePhase.horizontalScrollTask,
+                    "lane=\(lane.id) target=\(key.scrollTargetSpaceID?.uuidString ?? "nil") offsetX=\(Int(key.contentOffsetX.rounded())) appeared=\(hasAppeared)"
+                )
                 guard hasAppeared else { return }
-                await Task.yield()
                 scrollToTarget(with: horizontalReader, animated: true)
             }
         }
@@ -158,15 +222,35 @@ private struct WorkspaceLaneScrollView<RowContent: View>: View {
         return max(0, lane.contentSize.width - last.rect.maxX)
     }
 
+    private var scrollTargetDescription: String {
+        lane.scrollTargetSpaceID?.uuidString ?? "nil"
+    }
+
     private func scrollToTarget(with reader: ScrollViewProxy, animated: Bool) {
-        guard let target = lane.scrollTargetSpaceID else { return }
-        guard lane.contentSize.width > lane.frame.width + 1 else { return }
+        guard let target = lane.scrollTargetSpaceID else {
+            WorkspacePerformanceSignpost.emit(
+                WorkspacePerformancePhase.horizontalScrollRequest,
+                "phase=skip lane=\(lane.id) reason=noTarget animated=\(animated)"
+            )
+            return
+        }
+        guard lane.contentSize.width > lane.frame.width + 1 else {
+            WorkspacePerformanceSignpost.emit(
+                WorkspacePerformancePhase.horizontalScrollRequest,
+                "phase=skip lane=\(lane.id) reason=noOverflow animated=\(animated) width=\(Int(lane.contentSize.width.rounded())) frame=\(Int(lane.frame.width.rounded()))"
+            )
+            return
+        }
+        WorkspacePerformanceSignpost.emit(
+            WorkspacePerformancePhase.horizontalScrollRequest,
+            "phase=commit lane=\(lane.id) target=\(target.uuidString) animated=\(animated) offsetX=\(Int(lane.contentOffsetX.rounded()))"
+        )
         let action = {
-            reader.scrollTo(target, anchor: .leading)
+            reader.scrollTo(target, anchor: .center)
         }
 
         if animated {
-            withAnimation(.snappy(duration: 0.22)) {
+            withAnimation(horizontalFocusScrollAnimation) {
                 action()
             }
         } else {
@@ -176,11 +260,11 @@ private struct WorkspaceLaneScrollView<RowContent: View>: View {
 
     private struct HorizontalScrollKey: Hashable {
         let scrollTargetSpaceID: WorkspaceRow.ID?
-        let focusedSpaceID: WorkspaceRow.ID?
+        let contentOffsetX: CGFloat
 
         init(lane: WorkspaceLanePresentation) {
             scrollTargetSpaceID = lane.scrollTargetSpaceID
-            focusedSpaceID = lane.focusedSpaceID
+            contentOffsetX = lane.contentOffsetX
         }
     }
 }

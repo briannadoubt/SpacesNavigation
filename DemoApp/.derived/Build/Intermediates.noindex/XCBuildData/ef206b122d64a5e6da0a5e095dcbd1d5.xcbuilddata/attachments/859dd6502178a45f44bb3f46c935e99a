@@ -1,0 +1,39 @@
+{
+  "" : {
+    "diagnostics" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/SpacesNavigationDemoApp-primary.dia",
+    "emit-module-dependencies" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/SpacesNavigationDemoApp-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/SpacesNavigationDemoApp-primary-emit-module.dia",
+    "pch" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/SpacesNavigationDemoApp-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/SpacesNavigationDemoApp-primary.swiftdeps"
+  },
+  "/Users/bri/dev/SpacesNavigation/DemoApp/Sources/DemoRootView.swift" : {
+    "const-values" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/DemoRootView.swiftconstvalues",
+    "dependencies" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/DemoRootView.d",
+    "diagnostics" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/DemoRootView.dia",
+    "index-unit-output-path" : "/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/DemoRootView.o",
+    "llvm-bc" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/DemoRootView.bc",
+    "object" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/DemoRootView.o",
+    "swift-dependencies" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/DemoRootView.swiftdeps",
+    "swiftmodule" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/DemoRootView~partial.swiftmodule"
+  },
+  "/Users/bri/dev/SpacesNavigation/DemoApp/Sources/DemoSettingsView.swift" : {
+    "const-values" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/DemoSettingsView.swiftconstvalues",
+    "dependencies" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/DemoSettingsView.d",
+    "diagnostics" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/DemoSettingsView.dia",
+    "index-unit-output-path" : "/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/DemoSettingsView.o",
+    "llvm-bc" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/DemoSettingsView.bc",
+    "object" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/DemoSettingsView.o",
+    "swift-dependencies" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/DemoSettingsView.swiftdeps",
+    "swiftmodule" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/DemoSettingsView~partial.swiftmodule"
+  },
+  "/Users/bri/dev/SpacesNavigation/DemoApp/Sources/SpacesNavigationDemoApp.swift" : {
+    "const-values" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/SpacesNavigationDemoApp.swiftconstvalues",
+    "dependencies" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/SpacesNavigationDemoApp.d",
+    "diagnostics" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/SpacesNavigationDemoApp.dia",
+    "index-unit-output-path" : "/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/SpacesNavigationDemoApp.o",
+    "llvm-bc" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/SpacesNavigationDemoApp.bc",
+    "object" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/SpacesNavigationDemoApp.o",
+    "swift-dependencies" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/SpacesNavigationDemoApp.swiftdeps",
+    "swiftmodule" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigationDemoApp.build/Debug/SpacesNavigationDemoApp.build/Objects-normal/arm64/SpacesNavigationDemoApp~partial.swiftmodule"
+  }
+}

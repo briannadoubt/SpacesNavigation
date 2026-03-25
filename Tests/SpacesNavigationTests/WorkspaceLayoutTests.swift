@@ -267,6 +267,28 @@ struct WorkspaceLayoutTests {
     }
 
     @Test
+    func expandedMiddleLanePushesLowerRowsDownAndExtendsContentHeight() {
+        let engine = WorkspaceLayoutEngine(
+            metrics: WorkspaceLayoutMetrics(
+                defaultColumnWidth: 640,
+                zoomedColumnWidthFraction: 0.92,
+                verticalRowPeek: 0
+            )
+        )
+        var state = sampleState()
+        state.perform(.focusRowDown)
+        state.perform(.toggleZoom)
+
+        let snapshot = engine.snapshot(for: state, viewportSize: CGSize(width: 1400, height: 800))
+        let middleLane = try! #require(snapshot.lanes.first(where: { $0.id == 1 }))
+        let bottomLane = try! #require(snapshot.lanes.first(where: { $0.id == 2 }))
+
+        #expect(abs(middleLane.contentFrame.height - 800) < 0.5)
+        #expect(abs(bottomLane.contentFrame.minY - middleLane.contentFrame.maxY) < 0.5)
+        #expect(snapshot.contentRect.height > 1800)
+    }
+
+    @Test
     func singlePaneRowKeepsItsPaneWidthWithoutZoom() {
         let engine = WorkspaceLayoutEngine(metrics: WorkspaceLayoutMetrics(defaultColumnWidth: 640, verticalRowPeek: 30))
         let columns = [
@@ -377,6 +399,24 @@ struct WorkspaceLayoutTests {
     }
 
     @Test
+    func wideningFocusedPaneUpdatesHorizontalCenteringOffset() {
+        let engine = WorkspaceLayoutEngine(metrics: WorkspaceLayoutMetrics(defaultColumnWidth: 640))
+        var state = sampleState()
+        state.perform(.focusNextColumn)
+
+        let initialSnapshot = engine.snapshot(for: state, viewportSize: CGSize(width: 1400, height: 800))
+        let initialLane = try! #require(initialSnapshot.lanes.first(where: { $0.id == state.activeRowIndex }))
+
+        state.perform(.widenFocusedPane)
+
+        let widenedSnapshot = engine.snapshot(for: state, viewportSize: CGSize(width: 1400, height: 800))
+        let widenedLane = try! #require(widenedSnapshot.lanes.first(where: { $0.id == state.activeRowIndex }))
+
+        #expect(widenedLane.scrollTargetSpaceID == state.focus.rowID)
+        #expect(widenedLane.contentOffsetX > initialLane.contentOffsetX)
+    }
+
+    @Test
     func paneWidthsPersistIndependentlyAcrossNavigation() {
         let engine = WorkspaceLayoutEngine(metrics: WorkspaceLayoutMetrics(defaultColumnWidth: 640))
         var state = sampleState()
@@ -427,6 +467,22 @@ struct WorkspaceLayoutTests {
 
         state.perform(.focusPreviousColumn)
         #expect(state.viewportMode == .expandedSpaces([zoomedRowID]))
+    }
+
+    @Test
+    func shrinkingActiveRowUpdatesVerticalCenteringOffset() {
+        let engine = WorkspaceLayoutEngine()
+        var state = sampleState()
+        state.perform(.focusRowDown)
+
+        let initialSnapshot = engine.snapshot(for: state, viewportSize: CGSize(width: 1400, height: 800))
+
+        state.perform(.zoomWorkspaceOut)
+
+        let shrunkSnapshot = engine.snapshot(for: state, viewportSize: CGSize(width: 1400, height: 800))
+
+        #expect(shrunkSnapshot.activeLaneID == initialSnapshot.activeLaneID)
+        #expect(shrunkSnapshot.contentOffsetY < initialSnapshot.contentOffsetY)
     }
 
     @Test

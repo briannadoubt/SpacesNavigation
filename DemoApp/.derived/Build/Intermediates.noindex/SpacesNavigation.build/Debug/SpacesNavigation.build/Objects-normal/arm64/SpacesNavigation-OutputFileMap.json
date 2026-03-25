@@ -1,0 +1,79 @@
+{
+  "" : {
+    "diagnostics" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/SpacesNavigation-primary.dia",
+    "emit-module-dependencies" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/SpacesNavigation-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/SpacesNavigation-primary-emit-module.dia",
+    "pch" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/SpacesNavigation-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/SpacesNavigation-primary.swiftdeps"
+  },
+  "/Users/bri/dev/SpacesNavigation/Sources/SpacesNavigation/WorkspaceCommands.swift" : {
+    "const-values" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceCommands.swiftconstvalues",
+    "dependencies" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceCommands.d",
+    "diagnostics" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceCommands.dia",
+    "index-unit-output-path" : "/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceCommands.o",
+    "llvm-bc" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceCommands.bc",
+    "object" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceCommands.o",
+    "swift-dependencies" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceCommands.swiftdeps",
+    "swiftmodule" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceCommands~partial.swiftmodule"
+  },
+  "/Users/bri/dev/SpacesNavigation/Sources/SpacesNavigation/WorkspaceDemoContent.swift" : {
+    "const-values" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceDemoContent.swiftconstvalues",
+    "dependencies" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceDemoContent.d",
+    "diagnostics" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceDemoContent.dia",
+    "index-unit-output-path" : "/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceDemoContent.o",
+    "llvm-bc" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceDemoContent.bc",
+    "object" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceDemoContent.o",
+    "swift-dependencies" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceDemoContent.swiftdeps",
+    "swiftmodule" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceDemoContent~partial.swiftmodule"
+  },
+  "/Users/bri/dev/SpacesNavigation/Sources/SpacesNavigation/WorkspaceLayoutEngine.swift" : {
+    "const-values" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceLayoutEngine.swiftconstvalues",
+    "dependencies" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceLayoutEngine.d",
+    "diagnostics" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceLayoutEngine.dia",
+    "index-unit-output-path" : "/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceLayoutEngine.o",
+    "llvm-bc" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceLayoutEngine.bc",
+    "object" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceLayoutEngine.o",
+    "swift-dependencies" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceLayoutEngine.swiftdeps",
+    "swiftmodule" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceLayoutEngine~partial.swiftmodule"
+  },
+  "/Users/bri/dev/SpacesNavigation/Sources/SpacesNavigation/WorkspaceModels.swift" : {
+    "const-values" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceModels.swiftconstvalues",
+    "dependencies" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceModels.d",
+    "diagnostics" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceModels.dia",
+    "index-unit-output-path" : "/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceModels.o",
+    "llvm-bc" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceModels.bc",
+    "object" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceModels.o",
+    "swift-dependencies" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceModels.swiftdeps",
+    "swiftmodule" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceModels~partial.swiftmodule"
+  },
+  "/Users/bri/dev/SpacesNavigation/Sources/SpacesNavigation/WorkspacePerformanceSignpost.swift" : {
+    "const-values" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspacePerformanceSignpost.swiftconstvalues",
+    "dependencies" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspacePerformanceSignpost.d",
+    "diagnostics" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspacePerformanceSignpost.dia",
+    "index-unit-output-path" : "/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspacePerformanceSignpost.o",
+    "llvm-bc" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspacePerformanceSignpost.bc",
+    "object" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspacePerformanceSignpost.o",
+    "swift-dependencies" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspacePerformanceSignpost.swiftdeps",
+    "swiftmodule" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspacePerformanceSignpost~partial.swiftmodule"
+  },
+  "/Users/bri/dev/SpacesNavigation/Sources/SpacesNavigation/WorkspaceStore.swift" : {
+    "const-values" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceStore.swiftconstvalues",
+    "dependencies" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceStore.d",
+    "diagnostics" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceStore.dia",
+    "index-unit-output-path" : "/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceStore.o",
+    "llvm-bc" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceStore.bc",
+    "object" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceStore.o",
+    "swift-dependencies" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceStore.swiftdeps",
+    "swiftmodule" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceStore~partial.swiftmodule"
+  },
+  "/Users/bri/dev/SpacesNavigation/Sources/SpacesNavigation/WorkspaceView.swift" : {
+    "const-values" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceView.swiftconstvalues",
+    "dependencies" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceView.d",
+    "diagnostics" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceView.dia",
+    "index-unit-output-path" : "/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceView.o",
+    "llvm-bc" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceView.bc",
+    "object" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceView.o",
+    "swift-dependencies" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceView.swiftdeps",
+    "swiftmodule" : "/Users/bri/dev/SpacesNavigation/DemoApp/.derived/Build/Intermediates.noindex/SpacesNavigation.build/Debug/SpacesNavigation.build/Objects-normal/arm64/WorkspaceView~partial.swiftmodule"
+  }
+}

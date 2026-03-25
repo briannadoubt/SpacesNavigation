@@ -166,6 +166,10 @@ public struct WorkspaceLayoutEngine: Sendable {
         viewportSize: CGSize
     ) -> WorkspaceViewportSnapshot {
         precondition(!state.columns.isEmpty, "Workspace requires at least one column.")
+        let interval = WorkspacePerformanceSignpost.begin(
+            WorkspacePerformancePhase.snapshot,
+            "viewport=\(Int(viewportSize.width.rounded()))x\(Int(viewportSize.height.rounded())) lanes=\(state.maxRowCount) activeRow=\(state.activeRowIndex)"
+        )
 
         let viewportRect = CGRect(origin: .zero, size: viewportSize)
         let laneLayouts = laneLayouts(for: state, viewportSize: viewportSize)
@@ -240,7 +244,7 @@ public struct WorkspaceLayoutEngine: Sendable {
             }
         }
 
-        return WorkspaceViewportSnapshot(
+        let snapshot = WorkspaceViewportSnapshot(
             viewportSize: viewportSize,
             viewportRect: viewportRect,
             contentRect: CGRect(x: 0, y: 0, width: contentWidth, height: contentHeight),
@@ -253,6 +257,11 @@ public struct WorkspaceLayoutEngine: Sendable {
             lanes: lanes,
             columns: presentations
         )
+        WorkspacePerformanceSignpost.end(
+            interval,
+            "content=\(Int(contentWidth.rounded()))x\(Int(contentHeight.rounded())) offsetX=\(Int(activeLane.contentOffsetX.rounded())) offsetY=\(Int(clampedOffsetY.rounded()))"
+        )
+        return snapshot
     }
 
     private func offsetToCenter(frame: CGRect, viewportSize: CGSize) -> CGFloat {
@@ -271,6 +280,23 @@ public struct WorkspaceLayoutEngine: Sendable {
             min(viewportSize.width * metrics.zoomedColumnWidthFraction, viewportSize.width),
             metrics.defaultColumnWidth
         )
+        let laneMetricsByRowIndex = (0..<laneCount).map { rowIndex in
+            laneMetrics(
+                for: rowIndex,
+                state: state,
+                viewportHeight: viewportSize.height,
+                laneCount: laneCount
+            )
+        }
+        var laneOriginsByRowIndex = Array(repeating: CGFloat.zero, count: laneCount)
+        var yCursor: CGFloat = 0
+        for rowIndex in 0..<laneCount {
+            laneOriginsByRowIndex[rowIndex] = yCursor
+            yCursor += laneMetricsByRowIndex[rowIndex].frameHeight
+            if rowIndex < laneCount - 1 {
+                yCursor += metrics.interRowSpacing
+            }
+        }
         let activeExpandedRowID: WorkspaceRow.ID? = {
             guard case .expandedSpaces(let expanded) = state.viewportMode,
                   expanded.contains(state.focus.rowID) else {
@@ -279,23 +305,15 @@ public struct WorkspaceLayoutEngine: Sendable {
             return state.focus.rowID
         }()
         return (0..<laneCount).map { rowIndex in
-            let laneColumns = state.columns(forRowIndex: rowIndex)
-            let usesSinglePaneLane = laneColumns.count == 1
+            let laneMetrics = laneMetricsByRowIndex[rowIndex]
+            let laneColumns = laneMetrics.columns
+            let usesSinglePaneLane = laneMetrics.usesSinglePaneLane
             var xCursor: CGFloat = 0
             var spaces: [LaneSpaceLayout] = []
-            let isExpandedActiveLane = rowIndex == state.activeRowIndex && activeExpandedRowID == state.focus.rowID
-            let rowScale = state.rowHeightScale(for: rowIndex)
-            let tallestPreferredHeight = laneColumns.compactMap { $0.row(atLaneIndex: rowIndex)?.preferredHeight }.max() ?? 0
-            let scaledLaneHeight = isExpandedActiveLane
-                ? viewportSize.height
-                : min(max(tallestPreferredHeight * rowScale, 0), viewportSize.height)
-            let verticalInsets = laneInsets(
-                rowIndex: rowIndex,
-                laneCount: laneCount,
-                viewportHeight: scaledLaneHeight,
-                usesFullFrameLane: isExpandedActiveLane
-            )
-            let laneFrameHeight = scaledLaneHeight + verticalInsets.top + verticalInsets.bottom
+            let isExpandedActiveLane = laneMetrics.isExpandedActiveLane && activeExpandedRowID == state.focus.rowID
+            let rowScale = laneMetrics.rowScale
+            let verticalInsets = laneMetrics.insets
+            let laneFrameHeight = laneMetrics.frameHeight
 
             for column in laneColumns {
                 guard let row = column.row(atLaneIndex: rowIndex) else { continue }
@@ -391,7 +409,7 @@ public struct WorkspaceLayoutEngine: Sendable {
 
             return LaneLayout(
                 rowIndex: rowIndex,
-                originY: originY(for: rowIndex, state: state, viewportHeight: viewportSize.height),
+                originY: laneOriginsByRowIndex[rowIndex],
                 frameHeight: laneFrameHeight,
                 contentWidth: contentWidth,
                 contentOffsetX: clampedOffsetX,
@@ -401,32 +419,6 @@ public struct WorkspaceLayoutEngine: Sendable {
                 spaces: adjustedSpaces
             )
         }
-    }
-
-    private func originY(
-        for rowIndex: Int,
-        state: WorkspaceState,
-        viewportHeight: CGFloat
-    ) -> CGFloat {
-        var cursor: CGFloat = 0
-        for priorRowIndex in 0..<rowIndex {
-            let laneColumns = state.columns(forRowIndex: priorRowIndex)
-            let rowScale = state.rowHeightScale(for: priorRowIndex)
-            let tallestPreferredHeight = laneColumns.compactMap { $0.row(atLaneIndex: priorRowIndex)?.preferredHeight }.max() ?? 0
-            let scaledLaneHeight = min(max(tallestPreferredHeight * rowScale, 0),  viewportHeight)
-            let verticalInsets = laneInsets(
-                rowIndex: priorRowIndex,
-                laneCount: max(state.maxRowCount, 1),
-                viewportHeight: scaledLaneHeight,
-                usesFullFrameLane: false
-            )
-            let laneFrameHeight = scaledLaneHeight + verticalInsets.top + verticalInsets.bottom
-            cursor += laneFrameHeight
-            if priorRowIndex < rowIndex {
-                cursor += metrics.interRowSpacing
-            }
-        }
-        return cursor
     }
 
     private struct LaneSpaceLayout {
@@ -447,6 +439,53 @@ public struct WorkspaceLayoutEngine: Sendable {
         let bottomInset: CGFloat
         let scrollTargetSpaceID: WorkspaceRow.ID?
         let spaces: [LaneSpaceLayout]
+    }
+
+    private struct LaneMetrics {
+        let columns: [WorkspaceColumn]
+        let usesSinglePaneLane: Bool
+        let isExpandedActiveLane: Bool
+        let rowScale: CGFloat
+        let contentHeight: CGFloat
+        let frameHeight: CGFloat
+        let insets: (top: CGFloat, bottom: CGFloat)
+    }
+
+    private func laneMetrics(
+        for rowIndex: Int,
+        state: WorkspaceState,
+        viewportHeight: CGFloat,
+        laneCount: Int
+    ) -> LaneMetrics {
+        let laneColumns = state.columns(forRowIndex: rowIndex)
+        let usesSinglePaneLane = laneColumns.count == 1
+        let isExpandedActiveLane: Bool = {
+            guard rowIndex == state.activeRowIndex,
+                  case .expandedSpaces(let expanded) = state.viewportMode else {
+                return false
+            }
+            return expanded.contains(state.focus.rowID)
+        }()
+        let rowScale = state.rowHeightScale(for: rowIndex)
+        let tallestPreferredHeight = laneColumns.compactMap { $0.row(atLaneIndex: rowIndex)?.preferredHeight }.max() ?? 0
+        let contentHeight = isExpandedActiveLane
+            ? viewportHeight
+            : min(max(tallestPreferredHeight * rowScale, 0), viewportHeight)
+        let insets = laneInsets(
+            rowIndex: rowIndex,
+            laneCount: laneCount,
+            viewportHeight: contentHeight,
+            usesFullFrameLane: isExpandedActiveLane
+        )
+        return LaneMetrics(
+            columns: laneColumns,
+            usesSinglePaneLane: usesSinglePaneLane,
+            isExpandedActiveLane: isExpandedActiveLane,
+            rowScale: rowScale,
+            contentHeight: contentHeight,
+            frameHeight: contentHeight + insets.top + insets.bottom,
+            insets: insets
+        )
     }
 
     private func laneInsets(

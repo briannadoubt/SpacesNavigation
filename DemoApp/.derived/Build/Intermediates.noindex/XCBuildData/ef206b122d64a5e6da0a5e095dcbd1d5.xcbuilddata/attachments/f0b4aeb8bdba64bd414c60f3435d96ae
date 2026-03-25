@@ -1,0 +1,4 @@
+module SpacesNavigation {
+header "SpacesNavigation-Swift.h"
+export *
+}
