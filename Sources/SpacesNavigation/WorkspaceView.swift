@@ -128,6 +128,7 @@ private struct WorkspaceLaneScrollView<RowContent: View>: View {
     @State private var hasAppeared = false
 
     var body: some View {
+        let spaceLayouts = laneSpaceLayouts
         ScrollViewReader { horizontalReader in
             ScrollView(.horizontal) {
                 HStack(alignment: .top, spacing: 0) {
@@ -136,19 +137,19 @@ private struct WorkspaceLaneScrollView<RowContent: View>: View {
                             .frame(width: leadingInset)
                     }
 
-                    ForEach(lane.spaces) { space in
-                        if let resolved = contentLookup.resolve(space: space) {
-                            rowContent(resolved.column, resolved.row, space.isFocused)
+                    ForEach(spaceLayouts) { item in
+                        if let resolved = contentLookup.resolve(space: item.space) {
+                            rowContent(resolved.column, resolved.row, item.space.isFocused)
                                 .frame(
-                                    width: max(space.rect.width, 0),
-                                    height: max(space.rect.height, 0)
+                                    width: max(item.space.rect.width, 0),
+                                    height: max(item.space.rect.height, 0)
                                 )
-                                .id(space.id)
-                                .zIndex(space.isFocused ? 2 : 0)
+                                .id(item.space.id)
+                                .zIndex(item.space.isFocused ? 2 : 0)
 
-                            if space.id != lane.spaces.last?.id {
+                            if item.spacingAfter > 0 {
                                 Color.clear
-                                    .frame(width: spaceSpacing(after: space))
+                                    .frame(width: item.spacingAfter)
                             }
                         }
                     }
@@ -191,16 +192,6 @@ private struct WorkspaceLaneScrollView<RowContent: View>: View {
         }
     }
 
-    private func spaceSpacing(after space: WorkspaceSpacePresentation) -> CGFloat {
-        guard let index = lane.spaces.firstIndex(where: { $0.id == space.id }),
-              index < lane.spaces.count - 1 else {
-            return 0
-        }
-        let current = lane.spaces[index]
-        let next = lane.spaces[index + 1]
-        return max(0, next.rect.minX - current.rect.maxX)
-    }
-
     private var leadingInset: CGFloat {
         max(0, lane.spaces.first?.rect.minX ?? 0)
     }
@@ -212,6 +203,20 @@ private struct WorkspaceLaneScrollView<RowContent: View>: View {
 
     private var scrollTargetDescription: String {
         lane.scrollTargetSpaceID?.uuidString ?? "nil"
+    }
+
+    private var laneSpaceLayouts: [LaneSpaceLayout] {
+        lane.spaces.indices.map { index in
+            let space = lane.spaces[index]
+            let spacingAfter: CGFloat
+            if index < lane.spaces.count - 1 {
+                let next = lane.spaces[index + 1]
+                spacingAfter = max(0, next.rect.minX - space.rect.maxX)
+            } else {
+                spacingAfter = 0
+            }
+            return LaneSpaceLayout(space: space, spacingAfter: spacingAfter)
+        }
     }
 
     private func scrollToTarget(with reader: ScrollViewProxy, animated: Bool) {
@@ -247,6 +252,15 @@ private struct WorkspaceLaneScrollView<RowContent: View>: View {
         init(lane: WorkspaceLanePresentation) {
             scrollTargetSpaceID = lane.scrollTargetSpaceID
             contentOffsetX = lane.contentOffsetX
+        }
+    }
+
+    private struct LaneSpaceLayout: Identifiable {
+        let space: WorkspaceSpacePresentation
+        let spacingAfter: CGFloat
+
+        var id: WorkspaceRow.ID {
+            space.id
         }
     }
 }
