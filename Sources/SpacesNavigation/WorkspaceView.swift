@@ -6,10 +6,6 @@ public struct WorkspaceView<RowContent: View>: View {
     private let rowContent: (WorkspaceColumn, WorkspaceRow, Bool) -> RowContent
     @State private var hasAppeared = false
 
-    private var verticalFocusScrollAnimation: Animation {
-        .snappy(duration: 0.12, extraBounce: 0)
-    }
-
     public init(
         store: WorkspaceStore,
         layoutEngine: WorkspaceLayoutEngine = WorkspaceLayoutEngine(),
@@ -52,28 +48,23 @@ public struct WorkspaceView<RowContent: View>: View {
                             WorkspacePerformancePhase.verticalScrollRequest,
                             "phase=appear lane=\(snapshot.activeLaneID) animated=false offsetY=\(Int(snapshot.contentOffsetY.rounded()))"
                         )
-                        scrollToActiveLane(with: verticalReader, snapshot: snapshot, animated: true)
+                        scrollToActiveLane(with: verticalReader, snapshot: snapshot, animated: false)
                     }
-                    .task(id: VerticalScrollKey(snapshot: snapshot)) {
+                    .onChange(of: VerticalScrollKey(snapshot: snapshot)) { oldKey, key in
                         let interval = WorkspacePerformanceSignpost.begin(
                             WorkspacePerformancePhase.verticalScrollTask,
-                            "lane=\(snapshot.activeLaneID) offsetY=\(Int(snapshot.contentOffsetY.rounded())) appeared=\(hasAppeared)"
+                            "lane=\(key.activeLaneID) offsetY=\(Int(key.contentOffsetY.rounded())) appeared=\(hasAppeared)"
                         )
                         var endMessage = "completed=false"
                         defer {
                             WorkspacePerformanceSignpost.end(interval, endMessage)
                         }
                         guard hasAppeared else {
-                            endMessage = "skipped=notAppeared lane=\(snapshot.activeLaneID)"
+                            endMessage = "skipped=notAppeared lane=\(key.activeLaneID)"
                             return
                         }
-                        await Task.yield()
-                        if Task.isCancelled {
-                            endMessage = "cancelled=true lane=\(snapshot.activeLaneID)"
-                            return
-                        }
-                        scrollToActiveLane(with: verticalReader, snapshot: snapshot, animated: true)
-                        endMessage = "cancelled=false lane=\(snapshot.activeLaneID) offsetY=\(Int(snapshot.contentOffsetY.rounded()))"
+                        scrollToActiveLane(with: verticalReader, snapshot: snapshot, animated: false)
+                        endMessage = "lane=\(key.activeLaneID) offsetY=\(Int(key.contentOffsetY.rounded())) animated=false priorLane=\(oldKey.activeLaneID)"
                     }
                 }
             }
@@ -93,13 +84,7 @@ public struct WorkspaceView<RowContent: View>: View {
             reader.scrollTo(snapshot.activeLaneID, anchor: .center)
         }
 
-        if animated {
-            withAnimation(verticalFocusScrollAnimation) {
-                action()
-            }
-        } else {
-            action()
-        }
+        action()
     }
 
     private struct VerticalScrollKey: Hashable {
@@ -141,10 +126,6 @@ private struct WorkspaceLaneScrollView<RowContent: View>: View {
     let contentLookup: WorkspaceContentLookup
     let rowContent: (WorkspaceColumn, WorkspaceRow, Bool) -> RowContent
     @State private var hasAppeared = false
-
-    private var horizontalFocusScrollAnimation: Animation {
-        .snappy(duration: 0.10, extraBounce: 0)
-    }
 
     var body: some View {
         ScrollViewReader { horizontalReader in
@@ -190,15 +171,22 @@ private struct WorkspaceLaneScrollView<RowContent: View>: View {
                     WorkspacePerformancePhase.horizontalScrollRequest,
                     "phase=appear lane=\(lane.id) target=\(scrollTargetDescription) animated=false offsetX=\(Int(lane.contentOffsetX.rounded()))"
                 )
-                scrollToTarget(with: horizontalReader, animated: true)
             }
-            .onChange(of: HorizontalScrollKey(lane: lane)) { _, key in
-                WorkspacePerformanceSignpost.emit(
+            .onChange(of: HorizontalScrollKey(lane: lane)) { oldKey, key in
+                let interval = WorkspacePerformanceSignpost.begin(
                     WorkspacePerformancePhase.horizontalScrollTask,
                     "lane=\(lane.id) target=\(key.scrollTargetSpaceID?.uuidString ?? "nil") offsetX=\(Int(key.contentOffsetX.rounded())) appeared=\(hasAppeared)"
                 )
-                guard hasAppeared else { return }
-                scrollToTarget(with: horizontalReader, animated: true)
+                var endMessage = "completed=false"
+                defer {
+                    WorkspacePerformanceSignpost.end(interval, endMessage)
+                }
+                guard hasAppeared else {
+                    endMessage = "skipped=notAppeared lane=\(lane.id)"
+                    return
+                }
+                scrollToTarget(with: horizontalReader, animated: false)
+                endMessage = "lane=\(lane.id) target=\(key.scrollTargetSpaceID?.uuidString ?? "nil") offsetX=\(Int(key.contentOffsetX.rounded())) animated=false priorTarget=\(oldKey.scrollTargetSpaceID?.uuidString ?? "nil")"
             }
         }
     }
@@ -249,13 +237,7 @@ private struct WorkspaceLaneScrollView<RowContent: View>: View {
             reader.scrollTo(target, anchor: .center)
         }
 
-        if animated {
-            withAnimation(horizontalFocusScrollAnimation) {
-                action()
-            }
-        } else {
-            action()
-        }
+        action()
     }
 
     private struct HorizontalScrollKey: Hashable {
